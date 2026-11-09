@@ -1,0 +1,189 @@
+{
+  "$schema": "https://schemas.sito-dev.com/project-config/v2/endpoint.schema.json",
+  "auth": "session",
+  "input": [
+    {
+      "in": "path",
+      "max": 2147483647,
+      "min": 1,
+      "name": "event_id",
+      "required": true,
+      "type": "int"
+    }
+  ],
+  "key": "post-events-event-id-entries",
+  "method": "POST",
+  "name": "YOIN POST /events/{event_id}/entries",
+  "output": {
+    "fields": [
+      {
+        "name": "id",
+        "value": {
+          "expr": "created._id"
+        }
+      },
+      {
+        "name": "version",
+        "value": {
+          "expr": "1"
+        }
+      }
+    ],
+    "kind": "object",
+    "status": 201
+  },
+  "path": "/events/{event_id}/entries",
+  "scope": "club.write",
+  "steps": [
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "session.clientId = 'fanclub-web'",
+      "id": "client_allowed",
+      "kind": "check"
+    },
+    {
+      "db": "fc_members",
+      "forUpdate": false,
+      "id": "me",
+      "kind": "query",
+      "notFound": {
+        "message": "情報が見つかりません。",
+        "status": 404
+      },
+      "single": true,
+      "where": {
+        "field": "_id",
+        "op": "eq",
+        "value": {
+          "expr": "session.sub"
+        }
+      }
+    },
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "me.role_code = 'member' AND me.member_state != '3'",
+      "id": "member_allowed",
+      "kind": "check"
+    },
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "me.member_state = '2' AND ADD_HOURS(me.expires_at, 0) > NOW()",
+      "id": "require_active",
+      "kind": "check"
+    },
+    {
+      "db": "fc_events",
+      "forUpdate": false,
+      "id": "event",
+      "kind": "query",
+      "notFound": {
+        "message": "情報が見つかりません。",
+        "status": 404
+      },
+      "single": true,
+      "where": {
+        "all": [
+          {
+            "field": "min_tier",
+            "op": "lte",
+            "value": {
+              "expr": "me.tier_level"
+            }
+          },
+          {
+            "field": "_id",
+            "op": "eq",
+            "value": {
+              "expr": "input.event_id"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 404
+      },
+      "expr": "event.min_tier <= me.tier_level",
+      "id": "tier_allowed",
+      "kind": "check"
+    },
+    {
+      "error": {
+        "message": "応募の受付期間外です。",
+        "status": 409
+      },
+      "expr": "event.event_state = '1' AND ADD_HOURS(event.opens_at, 0) <= NOW() AND NOW() < ADD_HOURS(event.closes_at, 0)",
+      "id": "accepting",
+      "kind": "check"
+    },
+    {
+      "db": "fc_entries",
+      "forUpdate": false,
+      "id": "existing",
+      "kind": "query",
+      "limit": 1,
+      "single": false,
+      "where": {
+        "all": [
+          {
+            "field": "member_id",
+            "op": "eq",
+            "value": {
+              "expr": "session.sub"
+            }
+          },
+          {
+            "field": "event_id",
+            "op": "eq",
+            "value": {
+              "expr": "input.event_id"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "error": {
+        "message": "すでに応募履歴があります。取消後の再応募はできません。",
+        "status": 409
+      },
+      "expr": "LEN(existing) = 0",
+      "id": "not_applied",
+      "kind": "check"
+    },
+    {
+      "db": "fc_entries",
+      "id": "created",
+      "kind": "insert",
+      "values": {
+        "app_state": "1",
+        "applied_at": {
+          "expr": "NOW()"
+        },
+        "entry_key": {
+          "expr": "CONCAT(session.sub, ':', input.event_id)"
+        },
+        "event_id": {
+          "expr": "input.event_id"
+        },
+        "member_id": {
+          "expr": "session.sub"
+        },
+        "version": 1
+      }
+    }
+  ],
+  "strictInput": true,
+  "validationVersion": 2
+}

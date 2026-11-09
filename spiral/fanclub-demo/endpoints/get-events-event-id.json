@@ -1,0 +1,175 @@
+{
+  "$schema": "https://schemas.sito-dev.com/project-config/v2/endpoint.schema.json",
+  "auth": "session",
+  "input": [
+    {
+      "in": "path",
+      "max": 2147483647,
+      "min": 1,
+      "name": "event_id",
+      "required": true,
+      "type": "int"
+    }
+  ],
+  "key": "get-events-event-id",
+  "method": "GET",
+  "name": "YOIN GET /events/{event_id}",
+  "output": {
+    "fields": [
+      {
+        "name": "id",
+        "value": {
+          "expr": "event._id"
+        }
+      },
+      {
+        "name": "title",
+        "value": {
+          "expr": "event.title"
+        }
+      },
+      {
+        "name": "body",
+        "value": {
+          "expr": "event.body"
+        }
+      },
+      {
+        "name": "venue",
+        "value": {
+          "expr": "event.venue"
+        }
+      },
+      {
+        "name": "min_tier",
+        "value": {
+          "expr": "event.min_tier"
+        }
+      },
+      {
+        "name": "event_state",
+        "value": {
+          "expr": "event.event_state"
+        }
+      },
+      {
+        "name": "opens_at",
+        "value": {
+          "expr": "event.opens_at"
+        }
+      },
+      {
+        "name": "closes_at",
+        "value": {
+          "expr": "event.closes_at"
+        }
+      },
+      {
+        "name": "starts_at",
+        "value": {
+          "expr": "event.starts_at"
+        }
+      },
+      {
+        "name": "results_at",
+        "value": {
+          "expr": "event.results_at"
+        }
+      },
+      {
+        "name": "version",
+        "value": {
+          "expr": "event.version"
+        }
+      },
+      {
+        "name": "can_apply",
+        "value": {
+          "expr": "event.event_state = '1' AND ADD_HOURS(event.opens_at, 0) <= NOW() AND NOW() < ADD_HOURS(event.closes_at, 0)"
+        }
+      }
+    ],
+    "kind": "object",
+    "status": 200
+  },
+  "path": "/events/{event_id}",
+  "scope": "club.read",
+  "steps": [
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "session.clientId = 'fanclub-web'",
+      "id": "client_allowed",
+      "kind": "check"
+    },
+    {
+      "db": "fc_members",
+      "forUpdate": false,
+      "id": "me",
+      "kind": "query",
+      "notFound": {
+        "message": "情報が見つかりません。",
+        "status": 404
+      },
+      "single": true,
+      "where": {
+        "field": "_id",
+        "op": "eq",
+        "value": {
+          "expr": "session.sub"
+        }
+      }
+    },
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "me.role_code = 'member' AND me.member_state != '3'",
+      "id": "member_allowed",
+      "kind": "check"
+    },
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "me.member_state = '2' AND ADD_HOURS(me.expires_at, 0) > NOW()",
+      "id": "require_active",
+      "kind": "check"
+    },
+    {
+      "db": "fc_events",
+      "forUpdate": false,
+      "id": "event",
+      "kind": "query",
+      "notFound": {
+        "message": "情報が見つかりません。",
+        "status": 404
+      },
+      "single": true,
+      "where": {
+        "all": [
+          {
+            "field": "min_tier",
+            "op": "lte",
+            "value": {
+              "expr": "me.tier_level"
+            }
+          },
+          {
+            "field": "_id",
+            "op": "eq",
+            "value": {
+              "expr": "input.event_id"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "strictInput": true,
+  "validationVersion": 2
+}

@@ -1,0 +1,217 @@
+{
+  "$schema": "https://schemas.sito-dev.com/project-config/v2/endpoint.schema.json",
+  "auth": "session",
+  "input": [
+    {
+      "in": "path",
+      "max": 2147483647,
+      "min": 1,
+      "name": "member_id",
+      "required": true,
+      "type": "int"
+    },
+    {
+      "enum": [
+        "1",
+        "2",
+        "3"
+      ],
+      "in": "body",
+      "name": "member_state",
+      "required": true,
+      "type": "enum"
+    },
+    {
+      "in": "body",
+      "max": 2,
+      "min": 1,
+      "name": "tier_level",
+      "required": true,
+      "type": "int"
+    },
+    {
+      "format": "date-time",
+      "in": "body",
+      "maxLength": 40,
+      "name": "expires_at",
+      "pattern": {
+        "source": ".+(Z|[+-][0-9]{2}:[0-9]{2})$"
+      },
+      "required": true,
+      "type": "string"
+    },
+    {
+      "in": "body",
+      "max": 2147483646,
+      "min": 1,
+      "name": "version",
+      "required": true,
+      "type": "int"
+    }
+  ],
+  "key": "post-operator-members-member-id",
+  "method": "POST",
+  "name": "YOIN POST /operator/members/{member_id}",
+  "output": {
+    "fields": [
+      {
+        "name": "id",
+        "value": {
+          "expr": "input.member_id"
+        }
+      },
+      {
+        "name": "version",
+        "value": {
+          "expr": "input.version + 1"
+        }
+      }
+    ],
+    "kind": "object",
+    "status": 200
+  },
+  "path": "/operator/members/{member_id}",
+  "roles": [
+    "operator"
+  ],
+  "scope": "club.operate",
+  "security": {
+    "mfaMaxAgeSec": 300,
+    "requireMfa": true
+  },
+  "steps": [
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "session.clientId = 'fanclub-operator'",
+      "id": "client_allowed",
+      "kind": "check"
+    },
+    {
+      "db": "fc_members",
+      "forUpdate": false,
+      "id": "me",
+      "kind": "query",
+      "notFound": {
+        "message": "情報が見つかりません。",
+        "status": 404
+      },
+      "single": true,
+      "where": {
+        "field": "_id",
+        "op": "eq",
+        "value": {
+          "expr": "session.sub"
+        }
+      }
+    },
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "me.role_code = 'operator' AND me.member_state != '3'",
+      "id": "member_allowed",
+      "kind": "check"
+    },
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "me.member_state = '2' AND ADD_HOURS(me.expires_at, 0) > NOW()",
+      "id": "member_active",
+      "kind": "check"
+    },
+    {
+      "db": "fc_members",
+      "forUpdate": false,
+      "id": "target",
+      "kind": "query",
+      "notFound": {
+        "message": "情報が見つかりません。",
+        "status": 404
+      },
+      "single": true,
+      "where": {
+        "all": [
+          {
+            "field": "_id",
+            "op": "eq",
+            "value": {
+              "expr": "input.member_id"
+            }
+          },
+          {
+            "field": "role_code",
+            "op": "eq",
+            "value": "member"
+          }
+        ]
+      }
+    },
+    {
+      "error": {
+        "message": "有効期限を未来の日時にしてください。",
+        "status": 400
+      },
+      "expr": "input.member_state != '2' OR ADD_HOURS(input.expires_at, 0) > NOW()",
+      "id": "future_expiry",
+      "kind": "check"
+    },
+    {
+      "db": "fc_members",
+      "error": {
+        "message": "内容が更新されています。最新の情報を確認してください。",
+        "status": 409
+      },
+      "expect": "one",
+      "id": "updated",
+      "kind": "update",
+      "set": {
+        "expires_at": {
+          "expr": "ADD_HOURS(input.expires_at, 0)"
+        },
+        "joined_at": {
+          "expr": "IF(target.joined_at = NULL AND input.member_state = '2', NOW(), target.joined_at)"
+        },
+        "member_state": {
+          "expr": "input.member_state"
+        },
+        "tier_level": {
+          "expr": "input.tier_level"
+        },
+        "version": {
+          "expr": "input.version + 1"
+        }
+      },
+      "where": {
+        "all": [
+          {
+            "field": "_id",
+            "op": "eq",
+            "value": {
+              "expr": "input.member_id"
+            }
+          },
+          {
+            "field": "version",
+            "op": "eq",
+            "value": {
+              "expr": "input.version"
+            }
+          },
+          {
+            "field": "role_code",
+            "op": "eq",
+            "value": "member"
+          }
+        ]
+      }
+    }
+  ],
+  "strictInput": true,
+  "validationVersion": 2
+}
