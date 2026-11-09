@@ -1,0 +1,208 @@
+{
+  "$schema": "https://schemas.sito-dev.com/project-config/v2/endpoint.schema.json",
+  "auth": "session",
+  "input": [
+    {
+      "in": "body",
+      "maxBytes": 256,
+      "maxLength": 256,
+      "name": "title",
+      "pattern": {
+        "source": "\\S"
+      },
+      "required": true,
+      "type": "string"
+    },
+    {
+      "in": "body",
+      "maxBytes": 512,
+      "maxLength": 512,
+      "name": "teaser",
+      "pattern": {
+        "source": "\\S"
+      },
+      "required": true,
+      "type": "string"
+    },
+    {
+      "in": "body",
+      "maxBytes": 4096,
+      "maxLength": 4096,
+      "name": "body",
+      "pattern": {
+        "source": "\\S"
+      },
+      "required": true,
+      "type": "string"
+    },
+    {
+      "default": "",
+      "in": "body",
+      "maxBytes": 64,
+      "maxLength": 64,
+      "name": "cover_key",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "in": "body",
+      "max": 2,
+      "min": 1,
+      "name": "min_tier",
+      "required": true,
+      "type": "int"
+    },
+    {
+      "enum": [
+        "1",
+        "2"
+      ],
+      "in": "body",
+      "name": "pub_state",
+      "required": true,
+      "type": "enum"
+    },
+    {
+      "format": "date-time",
+      "in": "body",
+      "maxLength": 40,
+      "name": "published_at",
+      "pattern": {
+        "source": ".+(Z|[+-][0-9]{2}:[0-9]{2})$"
+      },
+      "required": true,
+      "type": "string"
+    },
+    {
+      "in": "body",
+      "maxBytes": 64,
+      "maxLength": 64,
+      "name": "seed_key",
+      "pattern": {
+        "source": "\\S"
+      },
+      "required": true,
+      "type": "string"
+    }
+  ],
+  "key": "post-operator-news",
+  "method": "POST",
+  "name": "YOIN POST /operator/news",
+  "output": {
+    "fields": [
+      {
+        "name": "id",
+        "value": {
+          "expr": "created._id"
+        }
+      },
+      {
+        "name": "version",
+        "value": {
+          "expr": "1"
+        }
+      }
+    ],
+    "kind": "object",
+    "status": 201
+  },
+  "path": "/operator/news",
+  "roles": [
+    "operator"
+  ],
+  "scope": "club.operate",
+  "security": {
+    "mfaMaxAgeSec": 300,
+    "requireMfa": true
+  },
+  "steps": [
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "session.clientId = 'fanclub-operator'",
+      "id": "client_allowed",
+      "kind": "check"
+    },
+    {
+      "db": "fc_members",
+      "forUpdate": false,
+      "id": "me",
+      "kind": "query",
+      "notFound": {
+        "message": "情報が見つかりません。",
+        "status": 404
+      },
+      "single": true,
+      "where": {
+        "field": "_id",
+        "op": "eq",
+        "value": {
+          "expr": "session.sub"
+        }
+      }
+    },
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "me.role_code = 'operator' AND me.member_state != '3'",
+      "id": "member_allowed",
+      "kind": "check"
+    },
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "me.member_state = '2' AND ADD_HOURS(me.expires_at, 0) > NOW()",
+      "id": "member_active",
+      "kind": "check"
+    },
+    {
+      "error": {
+        "message": "公開日時を確認してください。",
+        "status": 400
+      },
+      "expr": "input.pub_state != '2' OR ADD_HOURS(input.published_at, 0) <= NOW()",
+      "id": "publication_date",
+      "kind": "check"
+    },
+    {
+      "db": "fc_news",
+      "id": "created",
+      "kind": "insert",
+      "values": {
+        "body": {
+          "expr": "input.body"
+        },
+        "cover_key": {
+          "expr": "input.cover_key"
+        },
+        "min_tier": {
+          "expr": "input.min_tier"
+        },
+        "pub_state": {
+          "expr": "input.pub_state"
+        },
+        "published_at": {
+          "expr": "ADD_HOURS(input.published_at, 0)"
+        },
+        "seed_key": {
+          "expr": "input.seed_key"
+        },
+        "teaser": {
+          "expr": "input.teaser"
+        },
+        "title": {
+          "expr": "input.title"
+        },
+        "version": 1
+      }
+    }
+  ],
+  "strictInput": true,
+  "validationVersion": 2
+}

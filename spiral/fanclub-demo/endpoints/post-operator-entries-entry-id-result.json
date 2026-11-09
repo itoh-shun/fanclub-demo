@@ -1,0 +1,197 @@
+{
+  "$schema": "https://schemas.sito-dev.com/project-config/v2/endpoint.schema.json",
+  "auth": "session",
+  "input": [
+    {
+      "in": "path",
+      "max": 2147483647,
+      "min": 1,
+      "name": "entry_id",
+      "required": true,
+      "type": "int"
+    },
+    {
+      "enum": [
+        "won",
+        "lost"
+      ],
+      "in": "body",
+      "name": "result",
+      "required": true,
+      "type": "enum"
+    },
+    {
+      "in": "body",
+      "max": 2147483646,
+      "min": 1,
+      "name": "version",
+      "required": true,
+      "type": "int"
+    }
+  ],
+  "key": "post-operator-entries-entry-id-result",
+  "method": "POST",
+  "name": "YOIN POST /operator/entries/{entry_id}/result",
+  "output": {
+    "fields": [
+      {
+        "name": "id",
+        "value": {
+          "expr": "input.entry_id"
+        }
+      },
+      {
+        "name": "version",
+        "value": {
+          "expr": "input.version + 1"
+        }
+      }
+    ],
+    "kind": "object",
+    "status": 200
+  },
+  "path": "/operator/entries/{entry_id}/result",
+  "roles": [
+    "operator"
+  ],
+  "scope": "club.operate",
+  "security": {
+    "mfaMaxAgeSec": 300,
+    "requireMfa": true
+  },
+  "steps": [
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "session.clientId = 'fanclub-operator'",
+      "id": "client_allowed",
+      "kind": "check"
+    },
+    {
+      "db": "fc_members",
+      "forUpdate": false,
+      "id": "me",
+      "kind": "query",
+      "notFound": {
+        "message": "情報が見つかりません。",
+        "status": 404
+      },
+      "single": true,
+      "where": {
+        "field": "_id",
+        "op": "eq",
+        "value": {
+          "expr": "session.sub"
+        }
+      }
+    },
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "me.role_code = 'operator' AND me.member_state != '3'",
+      "id": "member_allowed",
+      "kind": "check"
+    },
+    {
+      "error": {
+        "message": "この操作は利用できません。",
+        "status": 403
+      },
+      "expr": "me.member_state = '2' AND ADD_HOURS(me.expires_at, 0) > NOW()",
+      "id": "member_active",
+      "kind": "check"
+    },
+    {
+      "db": "fc_entries",
+      "forUpdate": false,
+      "id": "entry",
+      "kind": "query",
+      "notFound": {
+        "message": "情報が見つかりません。",
+        "status": 404
+      },
+      "single": true,
+      "where": {
+        "field": "_id",
+        "op": "eq",
+        "value": {
+          "expr": "input.entry_id"
+        }
+      }
+    },
+    {
+      "db": "fc_events",
+      "forUpdate": false,
+      "id": "event",
+      "kind": "query",
+      "notFound": {
+        "message": "情報が見つかりません。",
+        "status": 404
+      },
+      "single": true,
+      "where": {
+        "field": "_id",
+        "op": "eq",
+        "value": {
+          "expr": "entry.event_id"
+        }
+      }
+    },
+    {
+      "error": {
+        "message": "結果を確定できる状態ではありません。",
+        "status": 409
+      },
+      "expr": "entry.app_state = '1' AND event.event_state != '3' AND NOW() >= ADD_HOURS(event.closes_at, 0) AND NOW() >= ADD_HOURS(event.results_at, 0)",
+      "id": "result_allowed",
+      "kind": "check"
+    },
+    {
+      "db": "fc_entries",
+      "error": {
+        "message": "内容が更新されています。最新の情報を確認してください。",
+        "status": 409
+      },
+      "expect": "one",
+      "id": "updated",
+      "kind": "update",
+      "set": {
+        "app_state": {
+          "expr": "IF(input.result = 'won', '3', '4')"
+        },
+        "version": {
+          "expr": "input.version + 1"
+        }
+      },
+      "where": {
+        "all": [
+          {
+            "field": "_id",
+            "op": "eq",
+            "value": {
+              "expr": "input.entry_id"
+            }
+          },
+          {
+            "field": "version",
+            "op": "eq",
+            "value": {
+              "expr": "input.version"
+            }
+          },
+          {
+            "field": "app_state",
+            "op": "eq",
+            "value": "1"
+          }
+        ]
+      }
+    }
+  ],
+  "strictInput": true,
+  "validationVersion": 2
+}
