@@ -1,0 +1,7 @@
+{
+  "$schema": "https://schemas.sito-dev.com/project-config/v2/environment.schema.json",
+  "connectionAlias": "spiral-default",
+  "key": "default",
+  "mapping": {},
+  "name": "既定の環境"
+}

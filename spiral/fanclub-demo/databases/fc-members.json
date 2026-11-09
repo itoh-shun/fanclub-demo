@@ -1,0 +1,59 @@
+{
+  "$schema": "https://schemas.sito-dev.com/project-config/v2/database.schema.json",
+  "displayName": "YOIN / fc_members",
+  "fields": [
+    {
+      "displayName": "login_email",
+      "name": "login_email",
+      "type": "email"
+    },
+    {
+      "displayName": "passwd",
+      "name": "passwd",
+      "type": "password"
+    },
+    {
+      "displayName": "display_name",
+      "name": "display_name",
+      "type": "text"
+    },
+    {
+      "displayName": "role_code",
+      "name": "role_code",
+      "type": "text"
+    },
+    {
+      "displayName": "tier_level",
+      "name": "tier_level",
+      "type": "int"
+    },
+    {
+      "displayName": "member_state",
+      "name": "member_state",
+      "type": "select"
+    },
+    {
+      "displayName": "joined_at",
+      "name": "joined_at",
+      "type": "datetime"
+    },
+    {
+      "displayName": "expires_at",
+      "name": "expires_at",
+      "type": "datetime"
+    },
+    {
+      "displayName": "version",
+      "name": "version",
+      "type": "int"
+    },
+    {
+      "displayName": "signup_op",
+      "name": "signup_op",
+      "type": "text"
+    }
+  ],
+  "key": "fc-members",
+  "kind": "normal",
+  "name": "fc_members"
+}

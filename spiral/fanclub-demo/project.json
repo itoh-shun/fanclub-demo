@@ -1,0 +1,13 @@
+{
+  "$schema": "https://schemas.sito-dev.com/project-config/v2/project.schema.json",
+  "dataMode": "spiral_api",
+  "formatVersion": 2,
+  "project": {
+    "name": "YOIN CLUB",
+    "slug": "fanclub-demo"
+  },
+  "requirements": {
+    "httpHosts": [],
+    "secrets": []
+  }
+}

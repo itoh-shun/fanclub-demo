@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schemas.sito-dev.com/project-config/v2/database.schema.json",
+  "displayName": "YOIN / fc_entries",
+  "fields": [
+    {
+      "displayName": "entry_key",
+      "name": "entry_key",
+      "type": "text"
+    },
+    {
+      "displayName": "member_id",
+      "name": "member_id",
+      "type": "int"
+    },
+    {
+      "displayName": "event_id",
+      "name": "event_id",
+      "type": "int"
+    },
+    {
+      "displayName": "app_state",
+      "name": "app_state",
+      "type": "select"
+    },
+    {
+      "displayName": "applied_at",
+      "name": "applied_at",
+      "type": "datetime"
+    },
+    {
+      "displayName": "version",
+      "name": "version",
+      "type": "int"
+    }
+  ],
+  "key": "fc-entries",
+  "kind": "normal",
+  "name": "fc_entries"
+}

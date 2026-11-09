@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schemas.sito-dev.com/project-config/v2/database.schema.json",
+  "displayName": "YOIN / fc_news",
+  "fields": [
+    {
+      "displayName": "seed_key",
+      "name": "seed_key",
+      "type": "text"
+    },
+    {
+      "displayName": "title",
+      "name": "title",
+      "type": "text"
+    },
+    {
+      "displayName": "teaser",
+      "name": "teaser",
+      "type": "text"
+    },
+    {
+      "displayName": "body",
+      "name": "body",
+      "type": "text"
+    },
+    {
+      "displayName": "cover_key",
+      "name": "cover_key",
+      "type": "text"
+    },
+    {
+      "displayName": "min_tier",
+      "name": "min_tier",
+      "type": "int"
+    },
+    {
+      "displayName": "pub_state",
+      "name": "pub_state",
+      "type": "select"
+    },
+    {
+      "displayName": "published_at",
+      "name": "published_at",
+      "type": "datetime"
+    },
+    {
+      "displayName": "version",
+      "name": "version",
+      "type": "int"
+    }
+  ],
+  "key": "fc-news",
+  "kind": "normal",
+  "name": "fc_news"
+}
