@@ -1,0 +1,68 @@
+{
+  "$schema": "https://schemas.sito-dev.com/project-config/v2/environment.schema.json",
+  "authBinding": {
+    "memberDbTitle": "fc_members",
+    "myAreaTitle": "FanclubMembers"
+  },
+  "connectionAlias": "spiral-plus",
+  "key": "plus",
+  "mapping": {
+    "fc_entries": {
+      "fields": {
+        "app_state": "app_state",
+        "applied_at": "applied_at",
+        "entry_key": "entry_key",
+        "event_id": "event_id",
+        "member_id": "member_id",
+        "version": "version"
+      },
+      "title": "fc_entries"
+    },
+    "fc_events": {
+      "fields": {
+        "body": "body",
+        "closes_at": "closes_at",
+        "event_state": "event_state",
+        "min_tier": "min_tier",
+        "opens_at": "opens_at",
+        "results_at": "results_at",
+        "seed_key": "seed_key",
+        "starts_at": "starts_at",
+        "title": "title",
+        "venue": "venue",
+        "version": "version"
+      },
+      "title": "fc_events"
+    },
+    "fc_members": {
+      "fields": {
+        "display_name": "display_name",
+        "expires_at": "expires_at",
+        "joined_at": "joined_at",
+        "login_email": "login_email",
+        "member_state": "member_state",
+        "passwd": "passwd",
+        "role_code": "role_code",
+        "signup_op": "signup_op",
+        "tier_level": "tier_level",
+        "version": "version"
+      },
+      "title": "fc_members"
+    },
+    "fc_news": {
+      "fields": {
+        "body": "body",
+        "cover_key": "cover_key",
+        "min_tier": "min_tier",
+        "pub_state": "pub_state",
+        "published_at": "published_at",
+        "seed_key": "seed_key",
+        "teaser": "teaser",
+        "title": "title",
+        "version": "version"
+      },
+      "title": "fc_news"
+    }
+  },
+  "name": "plus"
+}

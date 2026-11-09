@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.sito-dev.com/project-config/v2/client.schema.json",
+  "clientId": "fanclub-web",
+  "clientType": "public",
+  "firstParty": false,
+  "key": "fanclub-web",
+  "name": "YOIN CLUB",
+  "redirectUris": [
+    "http://127.0.0.1:5174/callback",
+    "https://fanclub.sito-dev.com/callback"
+  ]
+}
